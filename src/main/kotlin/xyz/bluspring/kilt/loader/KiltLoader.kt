@@ -72,7 +72,13 @@ class KiltLoader : KnitModLoader<ForgeMod>(Kilt.MOD_ID, "Forge") {
     // the mods ObjectArrayList is getting resorted *after* it's getting sorted in scanMods,
     // no matter what the fuck I do.
     // I don't have time to deal with this, so this works instead.
-    private lateinit var sortedModOrder: Collection<ForgeMod>
+    private lateinit var sortedModOrder: List<ForgeMod>
+
+    /**
+     * A list of mods that have been defined by this mod loader.
+     */
+	override val mods: List<ForgeMod>
+        get() = if (this::sortedModOrder.isInitialized) sortedModOrder else super.mods
 
     private val environment = KiltEnvironment()
     var config = KiltLoaderConfig()
