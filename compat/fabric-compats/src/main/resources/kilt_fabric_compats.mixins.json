@@ -10,6 +10,7 @@
         "creativecore.CreativeNetworkMixin",
         "emi.EmiAgnosFabricMixin",
         "geckolib.GeckoLibNetworkMixin",
+        "geckolib.GeoBlockEntityMixin",
         "geckolib.GeoRenderEventMixin",
         "geckolib.GeoRenderEventMixin$ArmorMixin",
         "geckolib.GeoRenderEventMixin$ArmorMixin$CompileRenderLayersMixin",
