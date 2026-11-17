@@ -50,12 +50,20 @@ object KiltReflectionHelper {
 
     @JvmStatic
     fun getField(clazz: Class<*>, name: String): Field {
-        return ObfuscationReflectionHelper.findField(clazz, name)
+        return try {
+            ObfuscationReflectionHelper.findField(clazz, name)
+        } catch (e: RuntimeException) {
+            throw e.cause ?: e
+        }
     }
 
     @JvmStatic
     fun getDeclaredField(clazz: Class<*>, name: String): Field {
-        return ObfuscationReflectionHelper.findField(clazz, name)
+        return try {
+            ObfuscationReflectionHelper.findField(clazz, name)
+        } catch (e: RuntimeException) {
+            throw e.cause ?: e
+        }
     }
 
     @JvmStatic
