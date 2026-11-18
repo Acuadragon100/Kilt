@@ -3,10 +3,10 @@ name: Gradle CI
 on:
   push:
     branches:
-      - 'version/*'
+      - 'eol/acua/*'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -36,3 +36,20 @@ jobs:
       with:
         name: Kilt Build JARs
         path: build/libs/Kilt-*.jar
+    - name: Changelog
+      run: ./gradlew createGitChangelog
+    - uses: benjlevesque/short-sha@v5.0
+      id: short-sha
+      with:
+        length: 6
+    - name: Publish
+      uses: softprops/action-gh-release@v3
+      with:
+        title: ${{ steps.short-sha.outputs.sha }}
+        tag_name: eol-acua-1.20.1-${{ steps.short-sha.outputs.sha }}
+        body_path: build/changelog.md
+        prerelease: true
+        files: |
+          build/libs/*.jar
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

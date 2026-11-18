@@ -2,6 +2,7 @@ import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.ReleaseType
 import net.fabricmc.loom.task.RemapJarTask
 import org.ajoberstar.grgit.Grgit
+import org.ajoberstar.grgit.Tag
 import org.gradle.api.plugins.JavaPluginExtension
 import org.jetbrains.kotlin.daemon.common.toHexString
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -79,6 +80,40 @@ loom {
             //"NO_OBFDATA_FOR_METHOD" to "error",
             "MISSING_INJECTOR_DESC_SINGLETARGET" to "error"
         ))
+    }
+}
+
+fun getTagsOnCurrentBranch(grgit: Grgit): List<Tag> {
+    val branch = grgit.branch.current()
+    return grgit.tag.list().filter { tag ->
+        grgit.branch.list(mapOf("contains" to tag.name)).contains(branch)
+    }.sortedBy { tag -> tag.commit.dateTime }.reversed()
+}
+
+
+tasks.register("createGitChangelog") {
+    val changelogPath = "${rootProject.projectDir}/build/changelog.md"
+    val grgit = Grgit.open(mutableMapOf<String, Any?>(
+        "dir" to File("$projectDir")
+    ))
+    val remote = grgit.remote.list().filter { remote -> remote.name == "origin" }.first()
+    var url = remote.url
+    if (url.startsWith("git@")) {
+        val colonPos = url.indexOf(":")
+        val domain = url.substring(4, colonPos)
+        val path = url.substring(colonPos+1)
+        url = "https://$domain/$path"
+    }
+    if (url.endsWith(".git")) {
+        url = url.substring(0, url.length-4)
+    }
+    val tags = getTagsOnCurrentBranch(grgit)
+    val file = File(changelogPath)
+    file.writeText("Note that this version of Kilt is considered end of life, do not expect any further updates\n\n")
+    grgit.log {
+        range(tags.first(), "HEAD")
+    }.forEach { commit ->
+        file.appendText("- ${commit.shortMessage} [${commit.abbreviatedId}](${url}/-/commit/${commit.id})\n")
     }
 }
 
@@ -665,6 +700,7 @@ fun createVersion(): String {
     var increment = 0
     var shouldBump = false
     for (tag in grgit.tag.list()) {
+        if (tag.name.startsWith("eol")) continue
         val components = tag.name.removePrefix("v").split(".").map { it.toInt() }
 
         // Check if the tag is actually for this MC version
